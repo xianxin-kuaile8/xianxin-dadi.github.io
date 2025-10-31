@@ -1,0 +1,243 @@
+/* 号码组数据备份样式 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #181825;
+    color: #e2e8f0;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+h1 {
+    text-align: center;
+    color: #89b4fa;
+    margin-bottom: 30px;
+}
+.summary {
+    background-color: #29293a;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+.number-group {
+    background-color: #29293a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+.group-id {
+    color: #f38ba8;
+}
+.numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #313244;
+    color: #a6e3a1;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+.number:hover {
+    background-color: #a6e3a1;
+    color: #181825;
+}
+@media (max-width: 768px) {
+    .number {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+    .group-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* 应用主界面样式 */
+.app-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #181825;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 号码选择器样式 */
+.number-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    max-width: 600px;
+}
+.number-ball {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #313244;
+    color: #e2e8f0;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.number-ball:hover {
+    background-color: #45475a;
+    transform: scale(1.1);
+}
+.number-ball.selected {
+    background-color: #d32f2f;
+    color: #ffffff;
+}
+
+/* 按钮样式 */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 5px;
+}
+.btn-primary {
+    background-color: #89b4fa;
+    color: #181825;
+}
+.btn-primary:hover {
+    background-color: #74c7ec;
+    transform: translateY(-1px);
+}
+.btn-secondary {
+    background-color: #45475a;
+    color: #e2e8f0;
+}
+.btn-secondary:hover {
+    background-color: #585b70;
+}
+.btn-danger {
+    background-color: #d32f2f;
+    color: #ffffff;
+}
+.btn-danger:hover {
+    background-color: #b71c1c;
+}
+
+/* 表格样式 */
+.match-results {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.match-results th,
+.match-results td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #313244;
+}
+.match-results th {
+    background-color: #29293a;
+    color: #89b4fa;
+    font-weight: bold;
+}
+.match-results tr:hover {
+    background-color: #29293a;
+}
+.match-results tr.highlight {
+    background-color: rgba(166, 227, 161, 0.2);
+}
+.match-results .high-frequency {
+    color: #a6e3a1;
+    font-weight: bold;
+}
+
+/* 统计信息样式 */
+.stats {
+    background-color: #29293a;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+.stats-item {
+    margin: 5px 0;
+}
+
+/* 加载状态样式 */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: #89b4fa;
+    font-size: 16px;
+}
+
+/* 提示消息样式 */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 6px;
+    background-color: #313244;
+    color: #e2e8f0;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.toast.success {
+    background-color: rgba(166, 227, 161, 0.2);
+    border-left: 4px solid #a6e3a1;
+}
+.toast.error {
+    background-color: rgba(211, 47, 47, 0.2);
+    border-left: 4px solid #d32f2f;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+    .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    .match-results {
+        font-size: 14px;
+    }
+    .match-results th,
+    .match-results td {
+        padding: 8px 4px;
+    }
+}
