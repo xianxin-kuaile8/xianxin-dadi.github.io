@@ -432,12 +432,12 @@ class NumberMatcherApp {
             return;
         }
         
-        // 按时间戳降序排序，获取最新的3个号码组
+        // 按编号降序排序，获取最新的3个号码组（最大的编号为最新）
         const latestGroups = [...this.numberGroups]
             .sort((a, b) => {
-                const timeA = new Date(a.timestamp || 0).getTime();
-                const timeB = new Date(b.timestamp || 0).getTime();
-                return timeB - timeA; // 降序排序，最新的在前
+                const idA = parseInt(a.id, 10);
+                const idB = parseInt(b.id, 10);
+                return idB - idA; // 降序排序，最大的编号在前
             })
             .slice(0, 3);
         this.latestGroupsContainer.innerHTML = '';
@@ -574,8 +574,8 @@ class NumberMatcherApp {
                     timestamp: new Date().toISOString()
                 });
                 
-                // 重新排序
-                this.numberGroups.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                // 重新排序 - 按编号降序，确保最大的编号在前面
+                this.numberGroups.sort((a, b) => parseInt(b.id) - parseInt(a.id));
                 
                 this.saveData();
                 this.singleIdInput.value = '';
@@ -1078,10 +1078,10 @@ class NumberMatcherApp {
             // 使用setTimeout让UI有机会更新
             setTimeout(() => {
                 try {
-                    // 确保数据已排序并过滤掉无效数据
+                    // 确保数据已排序并过滤掉无效数据 - 使用降序排序
                     const sortedGroups = [...this.numberGroups]
                         .filter(group => group && group.id && Array.isArray(group.numbers))
-                        .sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                        .sort((a, b) => parseInt(b.id) - parseInt(a.id));
                     
                     if (sortedGroups.length === 0) {
                         this.hideLoading();
@@ -1694,8 +1694,8 @@ class NumberMatcherApp {
             timestamp: group.timestamp || new Date().toISOString()
         });
         
-        // 重新排序
-        this.numberGroups.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        // 重新排序 - 按编号降序
+        this.numberGroups.sort((a, b) => parseInt(b.id) - parseInt(a.id));
         
         // 保存数据
         this.saveData();
