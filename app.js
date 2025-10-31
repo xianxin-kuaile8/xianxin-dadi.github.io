@@ -952,12 +952,14 @@ class NumberMatcherApp {
             
             // 获取最近出现的那组号码的编号
             const latestGroupId = result.latestGroupId;
-            // 获取最新录入的号码组编号（按时间戳排序获取真正最新的）
+            // 获取数据库中编号值最大的号码组（按ID降序排序）
             const latestStoredNumberGroup = [...this.numberGroups].sort((a, b) => {
-                return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                const idA = parseInt(a.id || '0', 10);
+                const idB = parseInt(b.id || '0', 10);
+                return idB - idA; // 降序排序，确保最大的编号在前面
             })[0];
             
-            // 遗漏期数计算：智能处理ID格式差异
+            // 遗漏期数计算：按照用户建议，使用公式：遗漏期数=现目前数据库中编号值最大的号码-最近期数
             let missedPeriods = 0;
             
             // 确保我们有必要的数据
@@ -969,52 +971,13 @@ class NumberMatcherApp {
                 };
                 
                 // 提取并规范化ID中的数字部分
-                const latestStoredNumStr = extractNumbers(latestStoredNumberGroup.id);
-                const latestGroupNumStr = extractNumbers(latestGroupId);
-                
-                // 处理不同格式的ID：当处理类似 25289 和 2025034 的情况
-                // 我们需要智能提取真正有意义的部分进行比较
-                let latestStoredNum = parseInt(latestStoredNumStr, 10);
-                let latestGroupNum = parseInt(latestGroupNumStr, 10);
+                const maxGroupNum = parseInt(extractNumbers(latestStoredNumberGroup.id), 10);
+                const latestGroupNum = parseInt(extractNumbers(latestGroupId), 10);
                 
                 // 验证转换结果
-                if (!isNaN(latestStoredNum) && !isNaN(latestGroupNum)) {
-                    // 计算直接差值
-                    let directDiff = latestStoredNum - latestGroupNum;
-                    
-                    // 智能判断ID格式差异情况
-                    const lenDiff = Math.abs(latestStoredNumStr.length - latestGroupNumStr.length);
-                    
-                    // 策略1：如果长度差异较大，尝试使用最后几位数字进行比较
-                    if (lenDiff >= 2 || directDiff < 0 || directDiff > 1000) {
-                        // 获取最后5位数字（期数通常不会超过5位数）
-                        const latestStoredLast5 = latestStoredNumStr.slice(-5).padStart(5, '0');
-                        const latestGroupLast5 = latestGroupNumStr.slice(-5).padStart(5, '0');
-                        
-                        // 计算最后5位的差值
-                        const last5Diff = parseInt(latestStoredLast5, 10) - parseInt(latestGroupLast5, 10);
-                        
-                        // 如果最后5位差值合理，使用这个结果
-                        if (last5Diff >= 0 && last5Diff < 1000) {
-                            missedPeriods = last5Diff;
-                        } else {
-                            // 策略2：如果ID格式完全不同，尝试只比较最后3-4位
-                            // 例如 2025034 取 5034，25289 取 5289
-                            const latestStoredLast4 = latestStoredNumStr.slice(-4).padStart(4, '0');
-                            const latestGroupLast4 = latestGroupNumStr.slice(-4).padStart(4, '0');
-                            const last4Diff = parseInt(latestStoredLast4, 10) - parseInt(latestGroupLast4, 10);
-                            
-                            if (last4Diff >= 0 && last4Diff < 1000) {
-                                missedPeriods = last4Diff;
-                            } else {
-                                // 作为最后的尝试，使用完整数字但确保结果合理
-                                missedPeriods = directDiff > 0 ? directDiff : 0;
-                            }
-                        }
-                    } else {
-                        // 如果直接差值合理，直接使用
-                        missedPeriods = directDiff;
-                    }
+                if (!isNaN(maxGroupNum) && !isNaN(latestGroupNum)) {
+                    // 直接计算最大编号与最近出现的组ID的差值
+                    missedPeriods = Math.max(0, maxGroupNum - latestGroupNum);
                 }
             }
             
