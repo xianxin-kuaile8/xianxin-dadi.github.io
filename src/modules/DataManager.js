@@ -524,6 +524,205 @@ class DataManager {
       return false;
     }
   }
+  
+  // 从远程URL同步数据
+  async syncDataFromRemote(remoteUrl) {
+    try {
+      this.app.showToast('正在从远程同步数据，请稍候...', 'info');
+      console.log(`开始从远程URL同步数据: ${remoteUrl}`);
+      
+      // 保存当前数据作为备份
+      this.backupCurrentData();
+      
+      // 发送请求获取远程数据
+      const response = await fetch(remoteUrl, {
+        headers: {
+          'Accept': 'application/json'
+        },
+        cache: 'reload' // 强制刷新缓存
+      });
+      
+      console.log(`远程请求状态: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        throw new Error(`远程数据加载失败: ${response.status} ${response.statusText}`);
+      }
+      
+      // 读取并解析JSON数据
+      const responseText = await response.text();
+      console.log(`远程响应文本长度: ${responseText.length} 字符`);
+      
+      try {
+        const remoteData = JSON.parse(responseText);
+        
+        // 验证数据格式
+        if (!Array.isArray(remoteData)) {
+          throw new Error('远程数据不是有效的数组格式');
+        }
+        
+        console.log(`远程数据组数: ${remoteData.length}`);
+        
+        // 合并或替换本地数据
+        // 这里使用替换策略，可以根据需求改为合并策略
+        this.numberGroups = [...remoteData];
+        
+        // 按录入编号排序
+        this.numberGroups.sort((a, b) => {
+          const idA = parseInt(a.id || a.period, 10);
+          const idB = parseInt(b.id || b.period, 10);
+          return idB - idA;
+        });
+        
+        // 保存更新后的数据
+        await this.saveData();
+        
+        this.app.showToast(`成功从远程同步 ${this.numberGroups.length} 组数据`, 'success');
+        console.log('远程数据同步成功');
+        return true;
+      } catch (jsonError) {
+        console.error('远程数据解析失败:', jsonError);
+        // 输出前100个字符以帮助调试
+        console.log('响应文本前100字符:', responseText.substring(0, 100));
+        throw new Error(`远程数据格式错误: ${jsonError.message}`);
+      }
+    } catch (error) {
+      console.error('远程数据同步失败:', error);
+      this.app.showToast(`远程同步失败: ${error.message}`, 'error');
+      return false;
+    }
+  }
+  
+  // 备份当前数据
+  backupCurrentData() {
+    try {
+      const backupKey = `backup_${this.storageKey}_${Date.now()}`;
+      localStorage.setItem(backupKey, JSON.stringify(this.numberGroups));
+      
+      // 清理旧备份，保留最近5个
+      this.cleanupOldBackups();
+      
+      console.log(`数据备份完成，备份键名: ${backupKey}`);
+      return backupKey;
+    } catch (error) {
+      console.error('数据备份失败:', error);
+      return null;
+    }
+  }
+  
+  // 清理旧备份
+  cleanupOldBackups() {
+    try {
+      const backupKeys = [];
+      const backupPrefix = `backup_${this.storageKey}_`;
+      
+      // 收集所有备份键
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(backupPrefix)) {
+          backupKeys.push(key);
+        }
+      }
+      
+      // 按时间戳排序（降序）
+      backupKeys.sort().reverse();
+      
+      // 删除超过保留数量的备份
+      const keepCount = 5;
+      for (let i = keepCount; i < backupKeys.length; i++) {
+        localStorage.removeItem(backupKeys[i]);
+        console.log(`删除旧备份: ${backupKeys[i]}`);
+      }
+    } catch (error) {
+      console.error('清理备份失败:', error);
+    }
+  }
+  
+  // 获取默认远程数据URL（可根据需求修改）
+  getDefaultRemoteDataUrl() {
+    // 您可以设置为GitHub Gist或其他公开URL
+    // return 'https://gist.githubusercontent.com/YOUR_USERNAME/YOUR_GIST_ID/raw/numberGroups.json';
+    return '';
+  }
+  
+  // 批量导入号码组（优化版本，支持去重和更新）
+  async importNumberGroups(groups, options = {}) {
+    const {
+      updateExisting = true,  // 是否更新已存在的组
+      skipDuplicates = true,  // 是否跳过重复的组
+      showToast = true        // 是否显示提示信息
+    } = options;
+    
+    try {
+      let successCount = 0;
+      let updatedCount = 0;
+      let skippedCount = 0;
+      let errorCount = 0;
+      
+      // 备份当前数据
+      this.backupCurrentData();
+      
+      for (const group of groups) {
+        try {
+          // 验证数据格式
+          if (!group || !group.period || !group.numbers || !Array.isArray(group.numbers)) {
+            errorCount++;
+            continue;
+          }
+          
+          // 检查是否已存在
+          const existingIndex = this.numberGroups.findIndex(g => g.period === group.period);
+          
+          if (existingIndex >= 0) {
+            if (updateExisting) {
+              // 更新已存在的组
+              this.numberGroups[existingIndex] = { ...group };
+              updatedCount++;
+            } else if (skipDuplicates) {
+              // 跳过重复的组
+              skippedCount++;
+              continue;
+            }
+          } else {
+            // 添加新组
+            this.numberGroups.push({ ...group });
+            successCount++;
+          }
+        } catch (err) {
+          console.error('处理单个号码组失败:', err);
+          errorCount++;
+        }
+      }
+      
+      // 按录入编号排序
+      this.numberGroups.sort((a, b) => {
+        const idA = parseInt(a.id || a.period, 10);
+        const idB = parseInt(b.id || b.period, 10);
+        return idB - idA;
+      });
+      
+      // 保存更新后的数据
+      await this.saveData();
+      
+      // 显示结果
+      if (showToast) {
+        let message = `导入完成: 添加 ${successCount} 组`;
+        if (updatedCount > 0) message += `, 更新 ${updatedCount} 组`;
+        if (skippedCount > 0) message += `, 跳过 ${skippedCount} 组`;
+        if (errorCount > 0) message += `, 错误 ${errorCount} 组`;
+        
+        this.app.showToast(message, successCount + updatedCount > 0 ? 'success' : 'warning');
+      }
+      
+      console.log(`批量导入结果: 添加${successCount} 更新${updatedCount} 跳过${skippedCount} 错误${errorCount}`);
+      return { successCount, updatedCount, skippedCount, errorCount };
+    } catch (error) {
+      console.error('批量导入失败:', error);
+      if (showToast) {
+        this.app.showToast('批量导入失败', 'error');
+      }
+      return { successCount: 0, updatedCount: 0, skippedCount: 0, errorCount: groups.length };
+    }
+  }
 }
 
 export default DataManager;
