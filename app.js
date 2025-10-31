@@ -11,10 +11,31 @@ class NumberMatcherApp {
         
         // 初始化
         this.initNumberSelector();
-        this.loadStoredData();
         this.setupEventListeners();
-        this.updateLatestGroupsDisplay();
-        this.updateDataCount();
+        
+        // 初始化DataManager并加载数据
+        this.initializeDataManager();
+    }
+    
+    // 初始化DataManager
+    async initializeDataManager() {
+        try {
+            // 动态导入DataManager
+            const { default: DataManager } = await import('./src/modules/DataManager.js');
+            this.dataManager = new DataManager(this);
+            
+            // 加载数据
+            await this.dataManager.loadStoredData();
+            
+            // 更新UI
+            this.updateLatestGroupsDisplay();
+            this.updateDataCount();
+        } catch (error) {
+            console.error('初始化DataManager失败:', error);
+            this.showToast('数据管理器初始化失败', 'error');
+            // 回退到localStorage
+            this.loadStoredData();
+        }
     }
     
     // 初始化DOM引用
@@ -372,7 +393,7 @@ class NumberMatcherApp {
         }
     };
     
-    // 从localStorage加载数据
+    // 从localStorage加载数据（备用方案）
     loadStoredData() {
         try {
             const stored = localStorage.getItem('numberGroups');
@@ -380,6 +401,7 @@ class NumberMatcherApp {
                 this.numberGroups = JSON.parse(stored);
                 // 按编号排序，确保最新的在后面
                 this.numberGroups.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                console.log('从localStorage加载了数据，共', this.numberGroups.length, '条');
             }
         } catch (error) {
             console.error('加载数据失败:', error);
