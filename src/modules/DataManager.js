@@ -9,21 +9,50 @@ class DataManager {
   // 从JSON文件加载数据
   async loadDataFromFile() {
     try {
-      const response = await fetch(this.dataFilePath);
+      console.log(`尝试加载文件: ${this.dataFilePath}`);
+      
+      // 使用绝对路径
+      const absolutePath = this.dataFilePath;
+      console.log(`加载路径: ${absolutePath}`);
+      
+      const response = await fetch(absolutePath);
+      console.log(`请求状态: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) {
-        throw new Error(`文件加载失败: ${response.status}`);
+        throw new Error(`文件加载失败: ${response.status} ${response.statusText}`);
       }
       
-      this.numberGroups = await response.json();
-      // 按录入编号排序，确保最大的编号在前面（最新录入的）
-      // 转换为数字进行比较，避免字符串比较问题
-      this.numberGroups.sort((a, b) => {
-        const idA = parseInt(a.id || a.period, 10);
-        const idB = parseInt(b.id || b.period, 10);
-        return idB - idA;
-      });
+      // 检查响应内容类型
+      const contentType = response.headers.get('content-type');
+      console.log(`响应内容类型: ${contentType}`);
       
-      console.log(`成功从文件加载 ${this.numberGroups.length} 组号码数据`);
+      // 读取响应文本而不是直接解析JSON，以便更好地调试
+      const responseText = await response.text();
+      console.log(`响应文本长度: ${responseText.length} 字符`);
+      
+      // 验证JSON格式
+      try {
+        this.numberGroups = JSON.parse(responseText);
+        console.log('JSON解析成功');
+        
+        // 验证解析后的数据结构
+        if (!Array.isArray(this.numberGroups)) {
+          throw new Error('解析后的数据不是数组');
+        }
+        console.log(`数据组数: ${this.numberGroups.length}`);
+        
+        // 按录入编号排序，确保最大的编号在前面（最新录入的）
+        this.numberGroups.sort((a, b) => {
+          const idA = parseInt(a.id || a.period, 10);
+          const idB = parseInt(b.id || b.period, 10);
+          return idB - idA;
+        });
+      } catch (jsonError) {
+        console.error('JSON解析失败:', jsonError);
+        // 输出前100个字符以帮助调试
+        console.log('响应文本前100字符:', responseText.substring(0, 100));
+        throw new Error(`JSON格式错误: ${jsonError.message}`);
+      }
       
       // 更新UI
       this.updateDataCount();
@@ -36,7 +65,9 @@ class DataManager {
     } catch (error) {
       console.error('从文件加载数据失败:', error);
       // 尝试从localStorage加载作为备份
-      return this.loadFromLocalStorage();
+      const localStorageResult = this.loadFromLocalStorage();
+      console.log(`从localStorage加载结果: ${localStorageResult}`);
+      return localStorageResult;
     }
   }
   
@@ -80,6 +111,8 @@ class DataManager {
   // 保存数据到JSON文件
   async saveToJsonFile(data = this.numberGroups) {
     try {
+      console.log(`尝试保存数据到文件: ${this.dataFilePath}`);
+      
       // 在浏览器环境中，我们无法直接写入文件系统
       // 这里使用fetch API和PUT请求尝试更新文件
       // 注意：在实际生产环境中，这需要后端服务器支持
@@ -91,16 +124,22 @@ class DataManager {
         body: JSON.stringify(data, null, 2)
       });
       
+      console.log(`保存请求状态: ${response.status} ${response.statusText}`);
+      
       if (response.ok) {
         console.log('数据已保存到JSON文件');
         return true;
       } else {
-        console.warn('无法直接写入JSON文件（可能需要服务器支持）');
+        console.warn(`无法直接写入JSON文件: ${response.status} ${response.statusText}（可能需要服务器支持）`);
         return false;
       }
     } catch (error) {
-      console.warn('保存到JSON文件时出错（浏览器环境限制）:', error);
-      // 在浏览器环境中，直接文件写入通常会失败，这是预期行为
+      console.error('保存到JSON文件失败:', error);
+      if (error.stack) {
+        console.error('错误堆栈:', error.stack);
+      }
+      // 在浏览器环境中，通常需要服务器支持才能保存文件
+      console.warn('前端环境中可能需要服务器支持才能保存文件。这是预期行为，应用将继续使用localStorage作为备份。');
       return false;
     }
   }
