@@ -15,12 +15,12 @@ class DataManager {
       }
       
       this.numberGroups = await response.json();
-      // 按期数排序，确保最新的期数在前面
+      // 按录入编号排序，确保最大的编号在前面（最新录入的）
       // 转换为数字进行比较，避免字符串比较问题
       this.numberGroups.sort((a, b) => {
-        const periodA = parseInt(a.period, 10);
-        const periodB = parseInt(b.period, 10);
-        return periodB - periodA;
+        const idA = parseInt(a.id || a.period, 10);
+        const idB = parseInt(b.id || b.period, 10);
+        return idB - idA;
       });
       
       console.log(`成功从文件加载 ${this.numberGroups.length} 组号码数据`);
@@ -46,12 +46,12 @@ class DataManager {
       const storedData = localStorage.getItem(this.storageKey);
       if (storedData) {
         this.numberGroups = JSON.parse(storedData);
-        // 按期数排序，确保最新的期数在前面
+        // 按录入编号排序，确保最大的编号在前面（最新录入的）
         // 转换为数字进行比较，避免字符串比较问题
         this.numberGroups.sort((a, b) => {
-          const periodA = parseInt(a.period, 10);
-          const periodB = parseInt(b.period, 10);
-          return periodB - periodA;
+          const idA = parseInt(a.id || a.period, 10);
+          const idB = parseInt(b.id || b.period, 10);
+          return idB - idA;
         });
         
         console.log(`成功从缓存加载 ${this.numberGroups.length} 组号码数据`);
@@ -151,12 +151,12 @@ class DataManager {
     }
     
     this.numberGroups.push(group);
-    // 按期数排序，确保最新的期数在前面
+    // 按录入编号排序，确保最大的编号在前面（最新录入的）
     // 转换为数字进行比较，避免字符串比较问题
     this.numberGroups.sort((a, b) => {
-      const periodA = parseInt(a.period, 10);
-      const periodB = parseInt(b.period, 10);
-      return periodB - periodA;
+      const idA = parseInt(a.id || a.period, 10);
+      const idB = parseInt(b.id || b.period, 10);
+      return idB - idA;
     });
     
     await this.saveData();
