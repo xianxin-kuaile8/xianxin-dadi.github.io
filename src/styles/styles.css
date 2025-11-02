@@ -424,31 +424,121 @@ h1 {
         font-size: 12px;
     }
     
-    /* 微信浏览器特殊优化 */
-    @media screen and (max-width: 375px) {
-        .number-ball {
-            width: 22px !important;
-            height: 22px !important;
-            font-size: 9px !important;
+    /* 微信浏览器特殊优化 - 针对所有手机屏幕尺寸 */
+    @media screen and (max-width: 480px) {
+        /* 强制微信浏览器重新渲染 */
+        * {
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
         }
         
+        /* 确保大底筛选区域的号码球完全在框内 */
         #number-selector, .number-selector {
             grid-template-columns: repeat(10, 1fr) !important;
             gap: 1px !important;
+            padding: 4px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: visible !important;
+        }
+        
+        .number-ball {
+            width: 20px !important;
+            height: 20px !important;
+            font-size: 8px !important;
+            box-sizing: border-box !important;
+            border-radius: 50% !important;
+            flex-shrink: 0 !important;
+            margin: 0 !important;
+        }
+        
+        /* 选二到选八按钮的紧凑布局 */
+        .match-btn {
+            min-width: 36px !important;
+            font-size: 9px !important;
+            padding: 3px 2px !important;
+            margin: 1px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* 匹配结果中的号码强制横向排列 */
+        .match-results .numbers {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            width: 100% !important;
+            padding: 4px 0 !important;
+            gap: 1px !important;
+            box-sizing: border-box !important;
+        }
+        
+        .number, .match-results .number {
+            width: 16px !important;
+            height: 16px !important;
+            font-size: 7px !important;
+            display: inline-flex !important;
+            box-sizing: border-box !important;
+            margin: 0 1px !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* 表格单元格优化 */
+        .match-results td {
+            padding: 4px 2px !important;
+            vertical-align: top !important;
+        }
+    }
+    
+    /* 超小屏幕设备优化 */
+    @media screen and (max-width: 375px) {
+        #number-selector, .number-selector {
+            gap: 0px !important;
+            padding: 2px !important;
+        }
+        
+        .number-ball {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 7px !important;
         }
         
         .match-btn {
-            min-width: 38px;
-            font-size: 10px;
-            padding: 3px 2px;
+            min-width: 32px !important;
+            font-size: 8px !important;
+            padding: 2px 1px !important;
         }
         
-        /* 进一步减小匹配结果中的号码大小 */
         .number, .match-results .number {
-            width: 18px !important;
-            height: 18px !important;
-            font-size: 8px !important;
-            margin: 1px;
+            width: 14px !important;
+            height: 14px !important;
+            font-size: 6px !important;
+            margin: 0 1px !important;
+        }
+    }
+    
+    /* 微信浏览器特殊处理 - 针对WebView */
+    @media screen and (max-width: 768px) and (min-width: 1px) {
+        /* 检测微信环境并应用更严格的样式 */
+        .app-container {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* 确保元素不会被缩放变形 */
+        * {
+            box-sizing: border-box !important;
+            -webkit-box-sizing: border-box !important;
+        }
+        
+        /* 固定元素尺寸，不允许浏览器自动缩放 */
+        .number-ball, 
+        .number, 
+        .match-results .number {
+            min-width: 0 !important;
+            min-height: 0 !important;
+            max-width: none !important;
+            max-height: none !important;
         }
     }
 }
