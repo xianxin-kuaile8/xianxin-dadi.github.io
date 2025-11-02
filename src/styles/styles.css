@@ -462,7 +462,7 @@ h1 {
         }
         
         /* 匹配结果中的号码球样式 - 与大底筛选保持一致并横向居中 */
-        .match-results .numbers {
+        .match-results td .numbers {
             display: flex !important;
             flex-direction: row !important;
             justify-content: center !important;
@@ -474,9 +474,11 @@ h1 {
             box-sizing: border-box !important;
             overflow-x: auto !important;
             white-space: nowrap !important;
+            min-height: 24px !important;
         }
         
-        .number, .match-results .number {
+        /* 更具体的选择器确保样式优先应用 */
+        .match-results td .numbers .number {
             width: 20px !important;
             height: 20px !important;
             font-size: 8px !important;
@@ -484,6 +486,10 @@ h1 {
             box-sizing: border-box !important;
             margin: 0 1px !important;
             flex-shrink: 0 !important;
+            border-radius: 50% !important;
+            background-color: #313244 !important;
+            color: #a6e3a1 !important;
+            font-weight: bold !important;
         }
         
         /* 表格单元格优化 */
@@ -512,7 +518,8 @@ h1 {
             padding: 2px 1px !important;
         }
         
-        .number, .match-results .number {
+        /* 超小屏幕下更具体的选择器 */
+        .match-results td .numbers .number {
             width: 18px !important;
             height: 18px !important;
             font-size: 7px !important;
