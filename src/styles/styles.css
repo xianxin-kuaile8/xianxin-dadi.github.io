@@ -276,30 +276,49 @@ h1 {
     
     /* 号码球优化 - 进一步减小尺寸防止超出框 */
     .number-ball {
-        width: 28px;
-        height: 28px;
-        font-size: 11px;
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+        box-sizing: border-box !important;
     }
     
-    /* 号码选择器网格调整 - 适应小屏幕 */
+    /* 号码选择器网格调整 - 适应小屏幕，确保不会超出 */
     #number-selector, .number-selector {
         grid-template-columns: repeat(10, 1fr) !important;
-        gap: 3px !important;
-        padding: 3px;
+        gap: 2px !important;
+        padding: 2px !important;
         margin-bottom: 15px;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: visible !important;
+        box-sizing: border-box !important;
     }
     
     /* 最新号码组中的号码显示优化 */
     .numbers {
-        gap: 3px;
-        flex-wrap: wrap;
-        display: flex;
+        gap: 2px !important;
+        flex-wrap: wrap !important;
+        display: flex !important;
+        box-sizing: border-box !important;
     }
     
-    .number {
-        width: 24px;
-        height: 24px;
-        font-size: 10px;
+    /* 匹配结果中的号码球大小调整和横向排列 */
+    .number, .match-results .number {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 9px !important;
+        display: inline-flex !important;
+        box-sizing: border-box !important;
+        flex-direction: row !important;
+    }
+    
+    /* 确保匹配结果中的号码横向排列 */
+    .match-results td .numbers {
+        flex-direction: row !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        overflow-x: auto !important;
     }
     
     /* 按钮调整 */
@@ -408,14 +427,14 @@ h1 {
     /* 微信浏览器特殊优化 */
     @media screen and (max-width: 375px) {
         .number-ball {
-            width: 26px;
-            height: 26px;
-            font-size: 10px;
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 9px !important;
         }
         
         #number-selector, .number-selector {
             grid-template-columns: repeat(10, 1fr) !important;
-            gap: 2px !important;
+            gap: 1px !important;
         }
         
         .match-btn {
@@ -425,10 +444,10 @@ h1 {
         }
         
         /* 进一步减小匹配结果中的号码大小 */
-        .match-results .number {
-            width: 22px;
-            height: 22px;
-            font-size: 9px;
+        .number, .match-results .number {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 8px !important;
             margin: 1px;
         }
     }
