@@ -1339,6 +1339,12 @@ var NumberMatcherApp = {
             this.elements.downloadNumberGroups.addEventListener('click', this.handleDownloadNumberGroups.bind(this));
         }
         
+        // 刷新数据按钮
+        var refreshDataBtn = document.getElementById('refresh-data');
+        if (refreshDataBtn) {
+            refreshDataBtn.addEventListener('click', this.handleRefreshData.bind(this));
+        }
+        
 
     },
     
@@ -2011,6 +2017,28 @@ var NumberMatcherApp = {
         } catch (e) {
             console.error('保存数据失败:', e);
             this.showToast('数据保存失败，可能存储空间已满', 'error');
+        }
+    },
+    
+    // 处理刷新数据
+    handleRefreshData: function() {
+        if (confirm('确定要刷新数据吗？这将从app.js重新加载默认数据，并覆盖当前localStorage中的数据！')) {
+            // 清除localStorage中的数据，强制从app.js重新加载
+            localStorage.removeItem(this.config.STORAGE_KEY);
+            
+            // 重新加载默认数据
+            this.loadDefaultData();
+            
+            // 更新UI
+            this.updateLatestGroupsDisplay();
+            this.updateDataCount();
+            
+            // 如果有选中的号码，重新执行匹配
+            if (this.state.selectedNumbers.length > 0) {
+                this.performMatch();
+            }
+            
+            this.showToast('数据已成功从app.js刷新', 'success');
         }
     },
     
