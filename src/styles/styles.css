@@ -267,7 +267,7 @@ h1 {
 /* 直接针对匹配结果区域的全局样式 - 仅在微信环境生效 */
 /* 这里使用max-width来确保只影响移动设备 */
 @media (max-width: 767px) {
-    /* 确保匹配结果中的号码球横向居中排列 */
+    /* 确保匹配结果中的号码球横向居中排列，允许换行 */
     .match-results td .numbers,
     .match-results td > .numbers,
     .match-results td > div.numbers {
@@ -275,13 +275,13 @@ h1 {
         flex-direction: row !important;
         justify-content: center !important;
         align-items: center !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
         padding: 4px 0 !important;
         gap: 1px !important;
         box-sizing: border-box !important;
-        overflow-x: auto !important;
-        white-space: nowrap !important;
+        overflow-x: visible !important;
+        white-space: normal !important;
         min-height: 24px !important;
         max-width: none !important;
         max-height: none !important;
@@ -473,20 +473,20 @@ h1 {
         font-size: 12px;
     }
     
-    /* 关键修改：匹配结果中的号码球样式 - 横向居中排列 */
+    /* 关键修改：匹配结果中的号码球样式 - 横向居中排列，允许换行 */
     /* 使用最高优先级的选择器 */
     .match-results td > .numbers, .match-results td > div.numbers {
         display: flex !important;
         flex-direction: row !important;
         justify-content: center !important;
         align-items: center !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
         padding: 4px 0 !important;
         gap: 1px !important;
         box-sizing: border-box !important;
-        overflow-x: auto !important;
-        white-space: nowrap !important;
+        overflow-x: visible !important;
+        white-space: normal !important;
         min-height: 24px !important;
         /* 重置所有可能干扰的样式 */
         max-width: none !important;
@@ -549,8 +549,8 @@ h1 {
             padding: 2px 1px !important;
         }
         
-        /* 超小屏幕下的匹配结果号码球 */
-        .match-results td .numbers .number {
+        /* 超小屏幕下的匹配结果号码球 - 使用高优先级选择器 */
+        .match-results td > .numbers > .number, .match-results td > div.numbers > .number {
             width: 18px !important;
             height: 18px !important;
             font-size: 7px !important;
