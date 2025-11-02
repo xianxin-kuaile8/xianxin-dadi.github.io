@@ -54,6 +54,8 @@ h1 {
     font-weight: bold;
     font-size: 14px;
     transition: all 0.2s ease;
+    /* 确保不会影响移动端样式 */
+    box-sizing: border-box;
 }
 .number:hover {
     background-color: #a6e3a1;
@@ -252,6 +254,79 @@ h1 {
     }
 }
 
+/* 微信浏览器专用优化 - 不受媒体查询限制 */
+/* 针对微信内置浏览器的特殊样式 */
+._wx_webview, .wx_webview, .wx_webview_redr {  
+    /* 强制元素不被缩放 */
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+    transform-origin: 0 0 !important;
+    transform: scale(1) !important;
+}
+
+/* 直接针对匹配结果区域的全局样式 - 仅在微信环境生效 */
+/* 这里使用max-width来确保只影响移动设备 */
+@media (max-width: 767px) {
+    /* 确保匹配结果中的号码球横向居中排列 */
+    .match-results td .numbers,
+    .match-results td > .numbers,
+    .match-results td > div.numbers {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        padding: 4px 0 !important;
+        gap: 1px !important;
+        box-sizing: border-box !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        min-height: 24px !important;
+        max-width: none !important;
+        max-height: none !important;
+        min-width: 0 !important;
+        position: static !important;
+    }
+    
+    /* 确保匹配结果中的号码球样式与大底筛选保持一致 */
+    .match-results td .numbers .number,
+    .match-results td > .numbers > .number,
+    .match-results td > div.numbers > .number {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 8px !important;
+        display: inline-flex !important;
+        box-sizing: border-box !important;
+        margin: 0 1px !important;
+        flex-shrink: 0 !important;
+        border-radius: 50% !important;
+        background-color: #313244 !important;
+        color: #a6e3a1 !important;
+        font-weight: bold !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: static !important;
+        float: none !important;
+        clear: none !important;
+        max-width: none !important;
+        max-height: none !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+    }
+    
+    /* 超小屏幕设备优化 */
+    @media screen and (max-width: 375px) {
+        .match-results td .numbers .number,
+        .match-results td > .numbers > .number,
+        .match-results td > div.numbers > .number {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 7px !important;
+        }
+    }
+}
+
 /* 手机端优化 - 针对微信浏览器和小屏幕设备 */
 @media (max-width: 480px) {
     /* 基础容器调整 */
@@ -272,53 +347,30 @@ h1 {
     /* 大底筛选和匹配结果UI调整 - 减小整体大小 */
     .app-container {
         padding: 8px !important;
+        -webkit-overflow-scrolling: touch;
     }
     
     /* 号码球优化 - 进一步减小尺寸防止超出框 */
     .number-ball {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 10px !important;
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 8px !important;
         box-sizing: border-box !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
     }
     
     /* 号码选择器网格调整 - 适应小屏幕，确保不会超出 */
     #number-selector, .number-selector {
         grid-template-columns: repeat(10, 1fr) !important;
-        gap: 2px !important;
-        padding: 2px !important;
+        gap: 1px !important;
+        padding: 4px !important;
         margin-bottom: 15px;
         max-width: 100% !important;
         width: 100% !important;
         overflow-x: visible !important;
         box-sizing: border-box !important;
-    }
-    
-    /* 最新号码组中的号码显示优化 */
-    .numbers {
-        gap: 2px !important;
-        flex-wrap: wrap !important;
-        display: flex !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* 匹配结果中的号码球大小调整和横向排列 */
-    .number, .match-results .number {
-        width: 20px !important;
-        height: 20px !important;
-        font-size: 9px !important;
-        display: inline-flex !important;
-        box-sizing: border-box !important;
-        flex-direction: row !important;
-    }
-    
-    /* 确保匹配结果中的号码横向排列 */
-    .match-results td .numbers {
-        flex-direction: row !important;
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        overflow-x: auto !important;
     }
     
     /* 按钮调整 */
@@ -333,11 +385,12 @@ h1 {
     /* 匹配按钮组调整 - 优化选二到选八的布局 */
     .match-btn {
         flex: 1;
-        min-width: 40px;
+        min-width: 36px !important;
         text-align: center;
-        padding: 4px 3px;
-        font-size: 11px;
-        margin: 2px;
+        padding: 3px 2px !important;
+        font-size: 9px !important;
+        margin: 1px !important;
+        flex-shrink: 0 !important;
     }
     
     /* 匹配按钮容器调整 - 更紧凑的布局 */
@@ -357,14 +410,9 @@ h1 {
         margin-top: 15px;
     }
     
-    /* 匹配结果中的号码横向排列 */
-    .match-results .numbers {
-        flex-direction: row !important;
-        justify-content: flex-start;
-        overflow-x: auto;
-        display: flex !important;
-        width: 100%;
-        white-space: nowrap;
+    .match-results td {
+        padding: 4px 2px !important;
+        vertical-align: top !important;
     }
     
     /* 导入区域调整 */
@@ -410,7 +458,8 @@ h1 {
     * {
         -webkit-transform: translateZ(0);
         transform: translateZ(0);
-        box-sizing: border-box;
+        box-sizing: border-box !important;
+        -webkit-box-sizing: border-box !important;
     }
     
     /* Toast提示位置调整 */
@@ -424,79 +473,61 @@ h1 {
         font-size: 12px;
     }
     
-    /* 微信浏览器特殊优化 - 针对所有手机屏幕尺寸 */
-    @media screen and (max-width: 480px) {
-        /* 强制微信浏览器重新渲染 */
-        * {
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-        }
-        
-        /* 确保大底筛选区域的号码球完全在框内 */
-        #number-selector, .number-selector {
-            grid-template-columns: repeat(10, 1fr) !important;
-            gap: 1px !important;
-            padding: 4px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            overflow: visible !important;
-        }
-        
-        .number-ball {
-            width: 20px !important;
-            height: 20px !important;
-            font-size: 8px !important;
-            box-sizing: border-box !important;
-            border-radius: 50% !important;
-            flex-shrink: 0 !important;
-            margin: 0 !important;
-        }
-        
-        /* 选二到选八按钮的紧凑布局 */
-        .match-btn {
-            min-width: 36px !important;
-            font-size: 9px !important;
-            padding: 3px 2px !important;
-            margin: 1px !important;
-            flex-shrink: 0 !important;
-        }
-        
-        /* 匹配结果中的号码球样式 - 与大底筛选保持一致并横向居中 */
-        .match-results td .numbers {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: center !important;
-            align-items: center !important;
-            flex-wrap: nowrap !important;
-            width: 100% !important;
-            padding: 4px 0 !important;
-            gap: 1px !important;
-            box-sizing: border-box !important;
-            overflow-x: auto !important;
-            white-space: nowrap !important;
-            min-height: 24px !important;
-        }
-        
-        /* 更具体的选择器确保样式优先应用 */
-        .match-results td .numbers .number {
-            width: 20px !important;
-            height: 20px !important;
-            font-size: 8px !important;
-            display: inline-flex !important;
-            box-sizing: border-box !important;
-            margin: 0 1px !important;
-            flex-shrink: 0 !important;
-            border-radius: 50% !important;
-            background-color: #313244 !important;
-            color: #a6e3a1 !important;
-            font-weight: bold !important;
-        }
-        
-        /* 表格单元格优化 */
-        .match-results td {
-            padding: 4px 2px !important;
-            vertical-align: top !important;
-        }
+    /* 关键修改：匹配结果中的号码球样式 - 横向居中排列 */
+    /* 使用最高优先级的选择器 */
+    .match-results td > .numbers, .match-results td > div.numbers {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        padding: 4px 0 !important;
+        gap: 1px !important;
+        box-sizing: border-box !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        min-height: 24px !important;
+        /* 重置所有可能干扰的样式 */
+        max-width: none !important;
+        max-height: none !important;
+        min-width: 0 !important;
+        position: static !important;
+    }
+    
+    /* 匹配结果中的号码球样式 - 与大底筛选保持一致 */
+    .match-results td > .numbers > .number, .match-results td > div.numbers > .number {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 8px !important;
+        display: inline-flex !important;
+        box-sizing: border-box !important;
+        margin: 0 1px !important;
+        flex-shrink: 0 !important;
+        border-radius: 50% !important;
+        background-color: #313244 !important;
+        color: #a6e3a1 !important;
+        font-weight: bold !important;
+        align-items: center !important;
+        justify-content: center !important;
+        /* 重置所有可能干扰的样式 */
+        position: static !important;
+        float: none !important;
+        clear: none !important;
+        max-width: none !important;
+        max-height: none !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+    }
+    
+    /* 固定元素尺寸，不允许浏览器自动缩放 */
+    .number-ball, 
+    .number, 
+    .match-results .number {
+        min-width: 0 !important;
+        min-height: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
     }
     
     /* 超小屏幕设备优化 */
@@ -518,36 +549,12 @@ h1 {
             padding: 2px 1px !important;
         }
         
-        /* 超小屏幕下更具体的选择器 */
+        /* 超小屏幕下的匹配结果号码球 */
         .match-results td .numbers .number {
             width: 18px !important;
             height: 18px !important;
             font-size: 7px !important;
             margin: 0 1px !important;
-        }
-    }
-    
-    /* 微信浏览器特殊处理 - 针对WebView */
-    @media screen and (max-width: 768px) and (min-width: 1px) {
-        /* 检测微信环境并应用更严格的样式 */
-        .app-container {
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* 确保元素不会被缩放变形 */
-        * {
-            box-sizing: border-box !important;
-            -webkit-box-sizing: border-box !important;
-        }
-        
-        /* 固定元素尺寸，不允许浏览器自动缩放 */
-        .number-ball, 
-        .number, 
-        .match-results .number {
-            min-width: 0 !important;
-            min-height: 0 !important;
-            max-width: none !important;
-            max-height: none !important;
         }
     }
 }
