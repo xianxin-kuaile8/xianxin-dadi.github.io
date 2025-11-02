@@ -1586,7 +1586,10 @@ var NumberMatcherApp = {
             html += '<td class="p-2 border border-gray-700 font-bold text-neon-blue">' + (index + 1) + '</td>';
             html += '<td class="p-2 border border-gray-700">';
             html += '<div class="flex flex-wrap gap-1">';
-            result.combination.forEach(function(num) {
+            // 对匹配号码进行升序排序
+            result.combination.slice().sort(function(a, b) {
+                return parseInt(a) - parseInt(b);
+            }).forEach(function(num) {
                 html += '<span class="inline-block w-8 h-8 rounded-full bg-neon-red flex items-center justify-center text-white font-bold">';
                 html += num.toString().padStart(2, '0');
                 html += '</span>';
@@ -1954,8 +1957,10 @@ var NumberMatcherApp = {
             html += '</div>';
             html += '<div class="flex flex-wrap gap-1">';
             
-            // 显示完整的20个号码，使用红色圆形加白色文字
-            group.numbers.forEach(function(num) {
+            // 显示完整的20个号码，使用红色圆形加白色文字，并按升序排序
+            group.numbers.slice().sort(function(a, b) {
+                return parseInt(a) - parseInt(b);
+            }).forEach(function(num) {
                 html += '<span class="inline-block w-6 h-6 rounded-full flex items-center justify-center text-xs bg-neon-red text-white">';
                 html += num.toString().padStart(2, '0');
                 html += '</span>';
