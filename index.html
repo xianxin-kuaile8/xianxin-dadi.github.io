@@ -173,6 +173,23 @@
         #refresh-data:hover {
             box-shadow: 0 0 15px rgba(211, 47, 47, 0.6);
         }
+        
+        /* 手机端刷新按钮样式 */
+        #refresh-data-mobile {
+            border: 2px solid rgba(211, 47, 47, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        #refresh-data-mobile:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 点击动画效果 - 点击时变红，然后恢复 */
+        #refresh-data-mobile:active {
+            background-color: #b71c1c;
+            box-shadow: 0 0 15px rgba(211, 47, 47, 0.8);
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body class="bg-dark-surface text-gray-200 min-h-screen">
@@ -216,7 +233,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mb-1">
-                        <button id="refresh-data" class="btn-primary bg-neon-red hover:bg-red-600 flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <button id="refresh-data-mobile" class="btn-primary bg-neon-red flex items-center transition-all duration-300 transform hover:scale-105">
                             <i class="fa fa-refresh mr-2 fa-spin-hover"></i>刷新数据
                         </button>
                         <p class="text-xs text-gray-400">点击刷新开奖号码</p>
