@@ -2015,6 +2015,11 @@ var NumberMatcherApp = {
         if (this.elements.dataCountLatest) {
             this.elements.dataCountLatest.textContent = count;
         }
+        // 更新手机端数据计数
+        var dataCountLatestMobile = document.getElementById('data-count-latest-mobile');
+        if (dataCountLatestMobile) {
+            dataCountLatestMobile.textContent = count;
+        }
     },
     
     // 保存到本地存储
