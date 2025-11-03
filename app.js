@@ -1349,6 +1349,12 @@ var NumberMatcherApp = {
             refreshDataBtn.addEventListener('click', this.handleRefreshData.bind(this));
         }
         
+        // 手机端刷新数据按钮
+        var refreshDataMobileBtn = document.getElementById('refresh-data-mobile');
+        if (refreshDataMobileBtn) {
+            refreshDataMobileBtn.addEventListener('click', this.handleRefreshData.bind(this));
+        }
+        
 
     },
     
