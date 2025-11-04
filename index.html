@@ -122,6 +122,25 @@
         }
         ::-webkit-scrollbar-track {
             background: #313244;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+        /* 侧边可滑动容器 */
+        .scroll-container {
+            position: relative;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: thin;
+        }
+        .min-w-max {
+            min-width: 100%;
         }
         ::-webkit-scrollbar-thumb {
             background: #45475a;
@@ -256,9 +275,17 @@
             <div class="card">
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-gray-300"><span id="selected-count">0</span>/25 已选择</p>
-                    <button id="clear-selection" class="btn-danger flex items-center">
-                        <i class="fa fa-times mr-2"></i>一键清除
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="filter-period-buttons flex mr-2">
+                            <button id="filter-all" class="btn-secondary filter-btn active mr-1">全部期数</button>
+                            <button id="filter-100" class="btn-secondary filter-btn mr-1">100期以内</button>
+                            <button id="filter-200" class="btn-secondary filter-btn mr-1">200期以内</button>
+                            <button id="filter-300" class="btn-secondary filter-btn">300期以内</button>
+                        </div>
+                        <button id="clear-selection" class="btn-danger flex items-center">
+                            <i class="fa fa-times mr-2"></i>一键清除
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- 号码选择器 -->
@@ -295,9 +322,42 @@
                 匹配结果
             </h2>
             <div class="card">
-                <div id="results-container" class="space-y-4">
-                    <p class="text-gray-400 text-center py-6">请先选择号码并点击匹配按钮</p>
+                <!-- 固定的统计信息区域 -->
+                <div id="statistics-container" class="p-4 border-b border-gray-700">
+                    <p class="text-gray-400 text-center py-2">请先选择号码并点击匹配按钮</p>
                 </div>
+                
+                <!-- 可滚动的匹配结果区域 -->
+                <div class="results-scroll-container overflow-y-auto overflow-x-auto" style="max-height: 300px;">
+                    <div id="results-container" class="space-y-4 min-w-max p-4">
+                        <!-- 匹配结果表格将在这里渲染 -->
+                    </div>
+                </div>
+                
+                <!-- 固定的复制按钮区域 -->
+                <div id="copy-buttons-container" class="p-4 border-t border-gray-700 flex justify-center space-x-3">
+                    <!-- 复制按钮将在这里渲染 -->
+                </div>
+                <style>
+                    .results-scroll-container {
+                        scrollbar-width: thin;
+                        scrollbar-color: #45475a #313244;
+                    }
+                    .results-scroll-container::-webkit-scrollbar {
+                        width: 8px;
+                        height: 8px;
+                    }
+                    .results-scroll-container::-webkit-scrollbar-track {
+                        background: #313244;
+                    }
+                    .results-scroll-container::-webkit-scrollbar-thumb {
+                        background: #45475a;
+                        border-radius: 4px;
+                    }
+                    .results-scroll-container::-webkit-scrollbar-thumb:hover {
+                        background: #585b70;
+                    }
+                </style>
             </div>
         </section>
 
