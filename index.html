@@ -43,8 +43,8 @@
         
         /* 替换@apply规则为标准CSS */
         .number-ball {
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 3rem;
+            height: 3rem;
             border-radius: 9999px;
             display: flex;
             align-items: center;
@@ -95,6 +95,14 @@
         }
         .btn-danger:hover {
             background-color: rgba(211, 47, 47, 0.8);
+        }
+        /* 号码选择器容器 - 10行8列布局 */
+        #number-selector {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.75rem;
+            justify-items: center;
+            margin: 1rem 0;
         }
         .card {
             background-color: #29293a;
@@ -289,21 +297,45 @@
                 </div>
                 
                 <!-- 号码选择器 -->
-                <div id="number-selector" class="grid grid-cols-10 gap-2 mb-6">
+                <div id="number-selector" class="grid grid-cols-8 gap-3 mb-6">
                     <!-- 1-80号码将通过JS动态生成 -->
                 </div>
                 
-                <!-- 匹配选项按钮组 -->
-                <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="match-btn btn-secondary" data-match="2">选二</button>
-                    <button class="match-btn btn-secondary" data-match="3">选三</button>
-                    <button class="match-btn btn-secondary" data-match="4">选四</button>
-                    <button class="match-btn btn-secondary" data-match="5">选五</button>
-                    <button class="match-btn btn-secondary" data-match="6">选六</button>
-                    <button class="match-btn btn-secondary" data-match="7">选七</button>
-                    <button class="match-btn btn-secondary" data-match="8">选八</button>
+                <!-- 匹配选项按钮组 - 调整为两行布局 -->
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="2">选二</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="3">选三</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="4">选四</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="5">选五</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="6">选六</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="7">选七</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="8">选八</button>
+                    <button class="match-btn btn-secondary py-3 px-4 text-base" data-match="9">选九</button>
                 </div>
                 <style>
+                    /* 默认移动端布局：两行各4个按钮 */
+                    @media screen and (min-width: 768px) {
+                        /* 电脑端布局：一行9个按钮 */
+                        .grid-cols-4 {
+                            grid-template-columns: repeat(9, 1fr);
+                        }
+                    }
+                    
+                    /* 缩小匹配结果表格内容 */
+                    #results-container table {
+                        font-size: 10px !important;
+                    }
+                    #results-container th,
+                    #results-container td {
+                        padding: 2px !important;
+                    }
+                    /* 缩小匹配结果中的号码球 */
+                    #results-container .number-ball {
+                        width: 16px !important;
+                        height: 16px !important;
+                        font-size: 7px !important;
+                    }
+                    
                     .match-btn.active {
                         background-color: #d32f2f;
                         color: white;
