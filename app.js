@@ -8,7 +8,8 @@ var NumberMatcherApp = {
         MAX_SELECTION: 25,
         TOTAL_NUMBERS: 80,
         STORAGE_KEY: 'numberMatcherAppData',
-        DEFAULT_MATCH_COUNT: 2
+        DEFAULT_MATCH_COUNT: 2,
+        MAX_GROUPS_LIMIT: 350 // 数据库号码组上限
     },
     
     // 应用状态
@@ -16,7 +17,9 @@ var NumberMatcherApp = {
         selectedNumbers: [],
         numberGroups: [],
         lastSelectedGroupId: null,
-        currentMatchCount: 2 // 当前选择的匹配数量（选二至选八）
+        currentMatchCount: 2, // 当前选择的匹配数量（选二至选八）
+        currentFilterPeriod: 0, // 当前筛选期数：0表示全部，100/200/300表示对应期数以内
+        matchedCombinationsTotal: 0
     },
     
     // DOM引用
@@ -35,7 +38,9 @@ var NumberMatcherApp = {
         dataCount: null,
         toast: null,
         toastMessage: null,
-        toastIcon: null
+        toastIcon: null,
+        filterButtons: {},
+        filterContainer: null
     },
     
     // 初始化应用
@@ -76,6 +81,14 @@ var NumberMatcherApp = {
         this.elements.toastIcon = document.getElementById('toast-icon');
         // 添加下载号码组数据按钮的引用
         this.elements.downloadNumberGroups = document.getElementById('download-updated-app');
+        // 添加筛选按钮引用
+        this.elements.filterContainer = document.querySelector('.filter-period-buttons');
+        this.elements.filterButtons = {
+            all: document.getElementById('filter-all'),
+            100: document.getElementById('filter-100'),
+            200: document.getElementById('filter-200'),
+            300: document.getElementById('filter-300')
+        };
     },
     
     // 初始化数据
@@ -1321,6 +1334,21 @@ var NumberMatcherApp = {
                 selectedButton.classList.add('active');
             }
         }
+        
+        // 设置默认选中的筛选按钮高亮（全部期数）
+        if (this.elements.filterButtons && this.elements.filterButtons.all) {
+            // 确保全部期数按钮处于高亮状态
+            Object.values(this.elements.filterButtons).forEach(function(button) {
+                if (button) {
+                    button.classList.remove('active');
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-secondary');
+                }
+            });
+            this.elements.filterButtons.all.classList.add('active');
+            this.elements.filterButtons.all.classList.remove('btn-secondary');
+            this.elements.filterButtons.all.classList.add('btn-primary');
+        }
     },
     
     // 绑定事件
@@ -1332,6 +1360,20 @@ var NumberMatcherApp = {
         this.elements.matchButtons.forEach(function(button) {
             button.addEventListener('click', this.handleMatchButtonClick.bind(this));
         }, this);
+        
+        // 筛选按钮事件
+        if (this.elements.filterButtons.all) {
+            this.elements.filterButtons.all.addEventListener('click', this.handleFilterButtonClick.bind(this, 0));
+        }
+        if (this.elements.filterButtons[100]) {
+            this.elements.filterButtons[100].addEventListener('click', this.handleFilterButtonClick.bind(this, 100));
+        }
+        if (this.elements.filterButtons[200]) {
+            this.elements.filterButtons[200].addEventListener('click', this.handleFilterButtonClick.bind(this, 200));
+        }
+        if (this.elements.filterButtons[300]) {
+            this.elements.filterButtons[300].addEventListener('click', this.handleFilterButtonClick.bind(this, 300));
+        }
         
         // 单个导入按钮
         this.elements.importSingle.addEventListener('click', this.handleSingleImport.bind(this));
@@ -1422,6 +1464,33 @@ var NumberMatcherApp = {
     },
     
     // 处理匹配按钮点击
+    // 处理筛选按钮点击事件
+    handleFilterButtonClick: function(period) {
+        // 更新状态
+        this.state.currentFilterPeriod = period;
+        
+        // 更新按钮样式
+        Object.values(this.elements.filterButtons).forEach(function(button) {
+            if (button) {
+                button.classList.remove('active');
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-secondary');
+            }
+        });
+        
+        var selectedButton = this.elements.filterButtons[period === 0 ? 'all' : period];
+        if (selectedButton) {
+            selectedButton.classList.add('active');
+            selectedButton.classList.remove('btn-secondary');
+            selectedButton.classList.add('btn-primary');
+        }
+        
+        // 如果有选中的号码，重新执行匹配
+        if (this.state.selectedNumbers.length > 0) {
+            this.performMatch();
+        }
+    },
+    
     handleMatchButtonClick: function(event) {
         // 获取点击的按钮文本，设置当前匹配数量
         var buttonText = event.target.textContent.trim();
@@ -1481,11 +1550,12 @@ var NumberMatcherApp = {
     // 执行匹配
     performMatch: function() {
         var selectedNumbers = this.state.selectedNumbers;
-        var numberGroups = this.state.numberGroups;
+        var allNumberGroups = this.state.numberGroups;
         var matchCount = this.state.currentMatchCount;
+        var filterPeriod = this.state.currentFilterPeriod;
         var results = [];
         
-        console.log('执行匹配，当前匹配数量:', matchCount, '选中号码数量:', selectedNumbers.length);
+        console.log('执行匹配，当前匹配数量:', matchCount, '选中号码数量:', selectedNumbers.length, '筛选期数:', filterPeriod);
         
         // 验证选中号码数量是否足够
         if (selectedNumbers.length < matchCount) {
@@ -1494,19 +1564,36 @@ var NumberMatcherApp = {
         }
         
         // 验证数据库中是否有号码组
-        if (numberGroups.length === 0) {
+        if (allNumberGroups.length === 0) {
             this.showToast('数据库中暂无号码组数据', 'warning');
             return;
         }
         
         // 计算数据库中最大编号
         var maxGroupId = 0;
-        numberGroups.forEach(function(group) {
+        allNumberGroups.forEach(function(group) {
             var idNum = parseInt(group.id);
             if (!isNaN(idNum) && idNum > maxGroupId) {
                 maxGroupId = idNum;
             }
         });
+        
+        // 根据筛选期数过滤号码组
+        var numberGroups = allNumberGroups;
+        if (filterPeriod > 0) {
+            // 筛选出编号在(maxGroupId - filterPeriod + 1)到maxGroupId之间的号码组
+            var minId = maxGroupId - filterPeriod + 1;
+            numberGroups = allNumberGroups.filter(function(group) {
+                var groupId = parseInt(group.id);
+                return !isNaN(groupId) && groupId >= minId && groupId <= maxGroupId;
+            });
+            
+            // 如果过滤后没有号码组，提示用户
+            if (numberGroups.length === 0) {
+                this.showToast('所选期数范围内暂无数据', 'warning');
+                return;
+            }
+        }
         
         // 生成所有可能的组合
         var combinations = this.generateCombinations(selectedNumbers, matchCount);
@@ -1534,7 +1621,7 @@ var NumberMatcherApp = {
             // 计算遗漏期数
             var absencePeriods = maxGroupId > 0 ? maxGroupId - maxMatchedGroupId : 0;
             
-            // 计算概率
+            // 计算概率，使用过滤后的号码组数量作为分母
             var probability = (occurrences / numberGroups.length * 100).toFixed(2);
             
             // 添加到结果中（只添加有出现次数的组合）
@@ -1561,8 +1648,8 @@ var NumberMatcherApp = {
         // 保存总匹配组合数量
         this.state.matchedCombinationsTotal = results.length;
         
-        // 只保留前15个结果
-        results = results.slice(0, 15);
+        // 只保留前50个结果
+        results = results.slice(0, 50);
         
         // 渲染结果
         this.renderMatchResults(results);
@@ -1570,80 +1657,119 @@ var NumberMatcherApp = {
     
     // 渲染匹配结果
     renderMatchResults: function(results) {
+        var statisticsContainer = document.getElementById('statistics-container');
+        var resultsContainer = this.elements.resultsContainer;
+        var copyButtonsContainer = document.getElementById('copy-buttons-container');
+        
+        // 重置所有容器
+        statisticsContainer.innerHTML = '';
+        resultsContainer.innerHTML = '';
+        copyButtonsContainer.innerHTML = '';
+        
         // 检查是否有匹配结果
         if (results.length === 0) {
             var matchCount = this.state.currentMatchCount;
-            this.elements.resultsContainer.innerHTML = '<p class="text-gray-400 text-center py-6">没有找到匹配的' + matchCount + '个号码的组合</p>';
+            statisticsContainer.innerHTML = '<p class="text-gray-400 text-center py-2">没有找到匹配的' + matchCount + '个号码的组合</p>';
             return;
         }
         
         // 统计信息
         var totalGroups = this.state.numberGroups.length;
+        var filterPeriod = this.state.currentFilterPeriod;
+        var usedGroups = filterPeriod > 0 ? 
+            this.state.numberGroups.filter(function(group) {
+                var groupId = parseInt(group.id);
+                var maxId = 0;
+                this.state.numberGroups.forEach(function(g) {
+                    var idNum = parseInt(g.id);
+                    if (!isNaN(idNum) && idNum > maxId) maxId = idNum;
+                }.bind(this));
+                return !isNaN(groupId) && groupId >= (maxId - filterPeriod + 1) && groupId <= maxId;
+            }.bind(this)).length : totalGroups;
+        
         var matchCount = this.state.currentMatchCount;
-        var displayCount = Math.min(15, results.length); // 显示的匹配组合数量
+        var displayCount = Math.min(50, results.length); // 显示的匹配组合数量
         
-        var html = '<div class="mb-4 p-3 bg-dark-accent rounded-lg">';
-        html += '<h3 class="text-lg font-bold text-neon-blue mb-2">统计信息</h3>';
-        html += '<p class="text-sm text-gray-300">总号码组数量: ' + totalGroups + '</p>';
-        html += '<p class="text-sm text-gray-300">当前匹配数量: 选' + matchCount + '</p>';
-        html += '<p class="text-sm text-gray-300">找到匹配组合: ' + this.state.matchedCombinationsTotal + '个</p>';
-        html += '<p class="text-sm text-gray-300">显示匹配组合: 15个</p>';
-        html += '</div>';
+        // 渲染统计信息到固定容器
+        var statsHtml = '<div class="p-3 bg-dark-accent rounded-lg">';
+        statsHtml += '<h3 class="text-lg font-bold text-neon-blue mb-2">统计信息</h3>';
+        statsHtml += '<p class="text-sm text-gray-300">总号码组数量: ' + totalGroups + '</p>';
+        statsHtml += '<p class="text-sm text-gray-300">' + (filterPeriod > 0 ? filterPeriod + '期以内匹配' : '全部期数匹配') + ': ' + usedGroups + '组</p>';
+        statsHtml += '<p class="text-sm text-gray-300">当前匹配数量: 选' + matchCount + '</p>';
+        statsHtml += '<p class="text-sm text-gray-300">找到匹配组合: ' + this.state.matchedCombinationsTotal + '个</p>';
+        statsHtml += '<p class="text-sm text-gray-300">显示匹配组合: ' + displayCount + '个</p>';
+        statsHtml += '</div>';
+        statisticsContainer.innerHTML = statsHtml;
         
-        // 结果表格
-        html += '<div class="overflow-x-auto">';
-        html += '<table class="w-full border-collapse">';
-        html += '<thead>';
-        html += '<tr class="bg-dark-accent">';
-        html += '<th class="p-2 text-left border border-gray-700">序号</th>';
-        html += '<th class="p-2 text-left border border-gray-700">匹配号码</th>';
-        html += '<th class="p-2 text-left border border-gray-700">出现次数</th>';
-        html += '<th class="p-2 text-left border border-gray-700">出现概率</th>';
-        html += '<th class="p-2 text-left border border-gray-700">最近出现期数</th>';
-        html += '<th class="p-2 text-left border border-gray-700">遗漏期数</th>';
-        html += '</tr>';
-        html += '</thead>';
-        html += '<tbody>';
+        // 渲染结果表格到滚动容器
+        var resultsHtml = '<div class="overflow-x-auto">';
+        resultsHtml += '<table class="w-full border-collapse">';
+        resultsHtml += '<thead>';
+        resultsHtml += '<tr class="bg-dark-accent">';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">序号</th>';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">匹配号码</th>';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">出现次数</th>';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">出现概率</th>';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">最近出现期数</th>';
+        resultsHtml += '<th class="p-2 text-left border border-gray-700">遗漏期数</th>';
+        resultsHtml += '</tr>';
+        resultsHtml += '</thead>';
+        resultsHtml += '<tbody>';
         
         results.forEach(function(result, index) {
-            html += '<tr class="hover:bg-dark-accent transition-colors">';
-            html += '<td class="p-2 border border-gray-700 font-bold text-neon-blue">' + (index + 1) + '</td>';
-            html += '<td class="p-2 border border-gray-700">';
-            html += '<div class="flex flex-wrap gap-1">';
+            resultsHtml += '<tr class="hover:bg-dark-accent transition-colors">';
+            resultsHtml += '<td class="p-2 border border-gray-700 font-bold text-neon-blue">' + (index + 1) + '</td>';
+            resultsHtml += '<td class="p-2 border border-gray-700">';
+            resultsHtml += '<div class="flex flex-wrap gap-1">';
             // 对匹配号码进行升序排序
             result.combination.slice().sort(function(a, b) {
                 return parseInt(a) - parseInt(b);
             }).forEach(function(num) {
-                html += '<span class="inline-block w-8 h-8 rounded-full bg-neon-red flex items-center justify-center text-white font-bold">';
-                html += num.toString().padStart(2, '0');
-                html += '</span>';
+                resultsHtml += '<span class="inline-block w-8 h-8 rounded-full bg-neon-red flex items-center justify-center text-white font-bold">';
+                resultsHtml += num.toString().padStart(2, '0');
+                resultsHtml += '</span>';
             });
-            html += '</div>';
-            html += '</td>';
-            html += '<td class="p-2 border border-gray-700">' + result.occurrences + '</td>';
-            html += '<td class="p-2 border border-gray-700">' + result.probability + '%</td>';
-            html += '<td class="p-2 border border-gray-700">' + result.latestAppearanceId + '</td>';
-            html += '<td class="p-2 border border-gray-700">' + result.absencePeriods + '</td>';
-            html += '</tr>';
+            resultsHtml += '</div>';
+            resultsHtml += '</td>';
+            resultsHtml += '<td class="p-2 border border-gray-700">' + result.occurrences + '</td>';
+            resultsHtml += '<td class="p-2 border border-gray-700">' + result.probability + '%</td>';
+            resultsHtml += '<td class="p-2 border border-gray-700">' + result.latestAppearanceId + '</td>';
+            resultsHtml += '<td class="p-2 border border-gray-700">' + result.absencePeriods + '</td>';
+            resultsHtml += '</tr>';
         });
         
-        html += '</tbody>';
-        html += '</table>';
-        html += '</div>';
+        resultsHtml += '</tbody>';
+        resultsHtml += '</table>';
+        resultsHtml += '</div>';
         
-        // 添加复制按钮
-        html += '<div class="mt-4 flex justify-center">';
-        html += '<button id="copy-numbers" class="btn-primary flex items-center">';
-        html += '<i class="fa fa-copy mr-2"></i>复制号码';
-        html += '</button>';
-        html += '</div>';
+        resultsContainer.innerHTML = resultsHtml;
         
-        this.elements.resultsContainer.innerHTML = html;
+        // 渲染复制按钮到固定容器
+        var copyHtml = '<button id="copy-top-10" class="btn-primary flex items-center">';
+        copyHtml += '<i class="fa fa-copy mr-2"></i>复制前10组';
+        copyHtml += '</button>';
+        copyHtml += '<button id="copy-top-20" class="btn-primary flex items-center">';
+        copyHtml += '<i class="fa fa-copy mr-2"></i>复制前20组';
+        copyHtml += '</button>';
+        copyHtml += '<button id="copy-top-50" class="btn-primary flex items-center">';
+        copyHtml += '<i class="fa fa-copy mr-2"></i>复制前50组';
+        copyHtml += '</button>';
+        
+        copyButtonsContainer.innerHTML = copyHtml;
         
         // 绑定复制按钮事件
-        var copyButton = document.getElementById('copy-numbers');
-        if (copyButton) {
-            copyButton.addEventListener('click', this.handleCopyNumbers.bind(this, results));
+        var copyTop10Button = document.getElementById('copy-top-10');
+        var copyTop20Button = document.getElementById('copy-top-20');
+        var copyTop50Button = document.getElementById('copy-top-50');
+        
+        if (copyTop10Button) {
+            copyTop10Button.addEventListener('click', this.handleCopyNumbers.bind(this, results, 10));
+        }
+        if (copyTop20Button) {
+            copyTop20Button.addEventListener('click', this.handleCopyNumbers.bind(this, results, 20));
+        }
+        if (copyTop50Button) {
+            copyTop50Button.addEventListener('click', this.handleCopyNumbers.bind(this, results, 50));
         }
     },
     
@@ -1764,6 +1890,19 @@ var NumberMatcherApp = {
             numbers: group.numbers,
             timestamp: new Date().toISOString()
         });
+        
+        // 检查是否超过数据库号码组上限
+        const maxLimit = this.config.MAX_GROUPS_LIMIT;
+        if (this.state.numberGroups.length > maxLimit) {
+            // 计算需要删除的数量
+            const deleteCount = this.state.numberGroups.length - maxLimit;
+            
+            // 删除最小编号的号码组（数组末尾的组）
+            this.state.numberGroups.splice(maxLimit, deleteCount);
+            
+            // 如果删除了数据，显示提示
+            this.showToast('数据库已超过350组上限，已自动删除最小编号的' + deleteCount + '组数据', 'warning');
+        }
         
         // 保存到本地存储
         this.saveToLocalStorage();
@@ -2062,19 +2201,26 @@ var NumberMatcherApp = {
     },
     
     // 处理复制号码功能
-    handleCopyNumbers: function(results) {
+    handleCopyNumbers: function(results, count) {
+        // 如果未指定数量，默认为所有结果
+        var copyCount = count || results.length;
+        // 确保不超过实际结果数量
+        copyCount = Math.min(copyCount, results.length);
+        
         var copyText = '';
         
-        results.forEach(function(result, index) {
+        // 只复制指定数量的结果
+        for (var i = 0; i < copyCount; i++) {
+            var result = results[i];
             // 格式：第x组: 号码1, 号码2, 号码3...
-            var line = '第' + (index + 1) + '组: ' + result.combination.join(', ') + '\n';
+            var line = '第' + (i + 1) + '组: ' + result.combination.join(', ') + '\n';
             copyText += line;
-        });
+        }
         
         // 使用Clipboard API复制文本
         if (navigator.clipboard) {
             navigator.clipboard.writeText(copyText).then(function() {
-                this.showToast('号码已复制到剪贴板', 'success');
+                this.showToast('前' + copyCount + '组号码已复制到剪贴板', 'success');
             }.bind(this)).catch(function() {
                 this.fallbackCopyText(copyText);
             }.bind(this));
