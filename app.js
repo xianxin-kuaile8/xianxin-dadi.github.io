@@ -11,13 +11,13 @@ var NumberMatcherApp = {
         DEFAULT_MATCH_COUNT: 2,
         MAX_GROUPS_LIMIT: 350 // 数据库号码组上限
     },
-    
+
     // 应用状态
     state: {
         selectedNumbers: [],
         numberGroups: [],
         lastSelectedGroupId: null,
-        currentMatchCount: 2, // 当前选择的匹配数量（选二至选八）
+        currentMatchCount: 2, // 当前选择的匹配数量（选二至选九）
         currentFilterPeriod: 0, // 当前筛选期数：0表示全部，100/200/300表示对应期数以内
         matchedCombinationsTotal: 0
     },
@@ -1408,15 +1408,35 @@ var NumberMatcherApp = {
     generateNumberSelector: function() {
         this.elements.numberSelector.innerHTML = '';
         
+        // 设置号码球容器为10行8列布局
+        this.elements.numberSelector.style.display = 'grid';
+        this.elements.numberSelector.style.gridTemplateColumns = 'repeat(8, 1fr)';
+        this.elements.numberSelector.style.gap = '8px';
+        
         for (var i = 1; i <= this.config.TOTAL_NUMBERS; i++) {
             var numberBall = document.createElement('div');
+            // 增加号码球尺寸和字体大小
             numberBall.className = 'number-ball';
             numberBall.dataset.number = i;
             numberBall.textContent = i.toString().padStart(2, '0');
             
+            // 直接设置样式，增大号码球尺寸
+            numberBall.style.width = '36px';
+            numberBall.style.height = '36px';
+            numberBall.style.fontSize = '16px';
+            numberBall.style.lineHeight = '36px';
+            numberBall.style.textAlign = 'center';
+            numberBall.style.borderRadius = '50%';
+            numberBall.style.backgroundColor = '#1f2937';
+            numberBall.style.color = '#f3f4f6';
+            numberBall.style.cursor = 'pointer';
+            numberBall.style.transition = 'all 0.2s ease';
+            numberBall.style.userSelect = 'none';
+            
             // 检查是否已选中
             if (this.state.selectedNumbers.includes(i)) {
                 numberBall.classList.add('selected');
+                numberBall.style.backgroundColor = '#f43f5e'; // neon-red颜色
             }
             
             // 绑定点击事件
@@ -1435,11 +1455,13 @@ var NumberMatcherApp = {
             // 取消选中
             this.state.selectedNumbers.splice(index, 1);
             event.target.classList.remove('selected');
+            event.target.style.backgroundColor = '#1f2937'; // 恢复默认背景色
         } else {
             // 选中号码，但不能超过最大选择数
             if (this.state.selectedNumbers.length < this.config.MAX_SELECTION) {
                 this.state.selectedNumbers.push(number);
                 event.target.classList.add('selected');
+                event.target.style.backgroundColor = '#f43f5e'; // 设置选中背景色
             } else {
                 this.showToast('最多只能选择25个号码', 'warning');
                 return;
@@ -1505,9 +1527,10 @@ var NumberMatcherApp = {
         else if (buttonText.includes('六') || buttonText.includes('6')) matchCount = 6;
         else if (buttonText.includes('七') || buttonText.includes('7')) matchCount = 7;
         else if (buttonText.includes('八') || buttonText.includes('8')) matchCount = 8;
+        else if (buttonText.includes('九') || buttonText.includes('9')) matchCount = 9;
         
         // 验证匹配数量是否在有效范围内
-        if (matchCount >= 2 && matchCount <= 8) {
+        if (matchCount >= 2 && matchCount <= 9) {
             console.log('设置当前匹配数量:', matchCount);
             this.state.currentMatchCount = matchCount;
             
@@ -1703,38 +1726,38 @@ var NumberMatcherApp = {
         
         // 渲染结果表格到滚动容器
         var resultsHtml = '<div class="overflow-x-auto">';
-        resultsHtml += '<table class="w-full border-collapse">';
+        resultsHtml += '<table class="w-full border-collapse text-xs">';
         resultsHtml += '<thead>';
         resultsHtml += '<tr class="bg-dark-accent">';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">序号</th>';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">匹配号码</th>';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">出现次数</th>';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">出现概率</th>';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">最近出现期数</th>';
-        resultsHtml += '<th class="p-2 text-left border border-gray-700">遗漏期数</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">序号</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">匹配号码</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">出现次数</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">遗漏期数</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">最近出现期数</th>';
+        resultsHtml += '<th class="p-1 text-left border border-gray-700">出现概率</th>';
         resultsHtml += '</tr>';
         resultsHtml += '</thead>';
         resultsHtml += '<tbody>';
         
         results.forEach(function(result, index) {
             resultsHtml += '<tr class="hover:bg-dark-accent transition-colors">';
-            resultsHtml += '<td class="p-2 border border-gray-700 font-bold text-neon-blue">' + (index + 1) + '</td>';
-            resultsHtml += '<td class="p-2 border border-gray-700">';
-            resultsHtml += '<div class="flex flex-wrap gap-1">';
+            resultsHtml += '<td class="p-1 border border-gray-700 font-bold text-neon-blue text-xs">' + (index + 1) + '</td>';
+            resultsHtml += '<td class="p-1 border border-gray-700">';
+            resultsHtml += '<div class="flex flex-wrap gap-0.5">';
             // 对匹配号码进行升序排序
             result.combination.slice().sort(function(a, b) {
                 return parseInt(a) - parseInt(b);
             }).forEach(function(num) {
-                resultsHtml += '<span class="inline-block w-8 h-8 rounded-full bg-neon-red flex items-center justify-center text-white font-bold">';
+                resultsHtml += '<span class="inline-block w-6 h-6 rounded-full bg-neon-red flex items-center justify-center text-white text-xs">';
                 resultsHtml += num.toString().padStart(2, '0');
                 resultsHtml += '</span>';
             });
             resultsHtml += '</div>';
             resultsHtml += '</td>';
-            resultsHtml += '<td class="p-2 border border-gray-700">' + result.occurrences + '</td>';
-            resultsHtml += '<td class="p-2 border border-gray-700">' + result.probability + '%</td>';
-            resultsHtml += '<td class="p-2 border border-gray-700">' + result.latestAppearanceId + '</td>';
-            resultsHtml += '<td class="p-2 border border-gray-700">' + result.absencePeriods + '</td>';
+            resultsHtml += '<td class="p-1 border border-gray-700 text-xs">' + result.occurrences + '</td>';
+            resultsHtml += '<td class="p-1 border border-gray-700 text-xs">' + result.absencePeriods + '</td>';
+            resultsHtml += '<td class="p-1 border border-gray-700 text-xs">' + result.latestAppearanceId + '</td>';
+            resultsHtml += '<td class="p-1 border border-gray-700 text-xs">' + result.probability + '%</td>';
             resultsHtml += '</tr>';
         });
         
@@ -2109,8 +2132,8 @@ var NumberMatcherApp = {
             return idB - idA;
         });
         
-        // 只显示前5个
-        var topGroups = sortedGroups.slice(0, 5);
+        // 只显示前3个（最大的三组）
+        var topGroups = sortedGroups.slice(0, 3);
         
         topGroups.forEach(function(group) {
             html += '<div class="p-3 border border-gray-700 rounded-lg hover:bg-dark-accent transition-colors" data-group-id="' + group.id + '">';
